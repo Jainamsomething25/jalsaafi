@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JalSaafi Command Center
 
-## Getting Started
+Website and dashboard for **JalSaafi**, an autonomous oil-spill response concept
+built for the HKU AI+ Challenge (AI + Smart City and Biodiversity track).
 
-First, run the development server:
+The pipeline the site explains is **Perceive → Predict → Decide → Act → Advise**.
+
+## What is real, what is a demo, what is roadmap
+
+| Stage | Status |
+|---|---|
+| Perceive: satellite SAR + ship-mounted bots | Proof of concept only. The SAR classifier lives in a separate repo, [jalsaafi-detection](https://github.com/Jainamsomething25/jalsaafi-detection). The detections shown on the dashboard are **demo data**, not a live feed. |
+| Predict: water-quality / fish suitability | **Real trained model** (scikit-learn Random Forest, 84.5% accuracy vs 72.3% for a neural net) on a pond-sensor dataset (pH, temperature, turbidity). It predicts whether water *conditions* can support fish life. It is **not** a food-safety certification, which needs lab toxin testing. |
+| Decide: route planning | Rule-based greedy planner (scores slicks by volume^1.3 / distance). **Not machine learning.** The simulator is an algorithm demo, not connected to the boat. |
+| Act: cleanup boat | Physical prototype (ESP32, L298 driver, pH/TDS/turbidity/temperature/ultrasonic sensors, magnetic oleophilic sheets). Full autonomy runs in simulation only; manual controls drive real hardware. |
+| Advise: "can I fish here?" | Plain-language output from the Predict model on sensor readings. |
+
+Impact figures on the dashboard are simulated patrol totals, not real-world measurements.
+
+## Stack
+
+Next.js (App Router), TypeScript, Tailwind CSS v4, GSAP + ScrollTrigger, Lenis,
+React Three Fiber + Drei, Framer Motion. No browser storage is used.
+
+## Run the site
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. The Control Center is at `/control-center`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Optional: copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_STAFF_KEY`
+to put a prompt in front of the Control Center. This is a client-side soft
+deterrent for demos, **not security**: the value is a public env var.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Run the model API (optional)
 
-## Learn More
+```bash
+pip install scikit-learn
+python ml/api.py
+# GET http://localhost:8000/predict?ph=7.4&temperature=21&turbidity=4.5
+```
 
-To learn more about Next.js, take a look at the following resources:
+A local, stdlib-only HTTP server with open CORS, intended for testing on one
+machine. Do not expose it publicly.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Repo layout
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `app/`, `components/`, `lib/`: the Next.js site and dashboard
+- `ml/`: water-quality model, local API and training data
+- `sim/`: standalone HTML simulators (route planning, swarm)
+- `existing-code/`: ESP32 firmware for the prototype
 
-## Deploy on Vercel
+## Licence and credits
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Code: MIT, see [LICENSE](LICENSE). `ml/realfishdataset.csv` is a third-party
+pond-water sensor dataset and is not covered by that licence. Photos in
+`public/photos/` show the project's own prototype. AI tools (Claude, Claude
+Code) were used in building this project.
